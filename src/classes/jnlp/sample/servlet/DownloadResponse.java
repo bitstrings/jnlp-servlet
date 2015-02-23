@@ -230,6 +230,7 @@ abstract public class DownloadResponse {
                 }
             } finally {
                 if (in != null) in.close();
+                if (out != null) out.close();
             }
         }
 
