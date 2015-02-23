@@ -200,6 +200,8 @@ public class JnlpResource {
             lastModified = conn.getLastModified();
         } catch (Exception e) {
             // do nothing
+        } finally {
+            conn.getInputStream().close();
         }
 
         if (lastModified == 0) {
