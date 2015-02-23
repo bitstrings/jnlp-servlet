@@ -268,7 +268,13 @@ abstract public class DownloadResponse {
         }
 
         int getContentLength() throws IOException {
-            return _url.openConnection().getContentLength();
+            URLConnection conn = _url.openConnection();
+            try {
+                return conn.getContentLength();
+            }
+            finally {
+                conn.getInputStream().close();
+            }
         }
         InputStream getContent() throws IOException {
             return _url.openConnection().getInputStream();

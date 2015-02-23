@@ -112,8 +112,10 @@ public class JnlpFileHandler {
         if (mimeType == null) mimeType = JNLP_MIME_TYPE;
 
         StringBuffer jnlpFileTemplate = new StringBuffer();
+
         URLConnection conn = resource.openConnection();
         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+        try {
         String line = br.readLine();
         if (line != null && line.startsWith("TS:")) {
             timeStamp = parseTimeStamp(line.substring(3));
@@ -127,6 +129,11 @@ public class JnlpFileHandler {
         while(line != null) {
             jnlpFileTemplate.append(line);
             line = br.readLine();
+        }
+        }
+        finally
+        {
+            br.close();
         }
 
         String jnlpFileContent = specializeJnlpTemplate(dreq.getHttpRequest(), path, jnlpFileTemplate.toString());
@@ -179,8 +186,10 @@ public class JnlpFileHandler {
         if (mimeType == null) mimeType = JNLP_MIME_TYPE;
 
         StringBuffer jnlpFileTemplate = new StringBuffer();
+
         URLConnection conn = resource.openConnection();
         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+        try {
         String line = br.readLine();
         if (line != null && line.startsWith("TS:")) {
             timeStamp = parseTimeStamp(line.substring(3));
@@ -194,6 +203,11 @@ public class JnlpFileHandler {
         while(line != null) {
             jnlpFileTemplate.append(line);
             line = br.readLine();
+        }
+        }
+        finally
+        {
+            br.close();
         }
 
         String jnlpFileContent = specializeJnlpTemplate(dreq.getHttpRequest(), path, jnlpFileTemplate.toString());
