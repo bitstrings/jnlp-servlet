@@ -193,13 +193,22 @@ public class JnlpResource {
 
     long getLastModified(ServletContext context, URL resource, String path) {
         long lastModified = 0;
-        URLConnection conn;
+        URLConnection conn = null;
         try {
             // Get last modified time
             conn = resource.openConnection();
             lastModified = conn.getLastModified();
         } catch (Exception e) {
             // do nothing
+        } finally {
+            if (conn != null)
+            {
+                try
+                {
+                    conn.getInputStream().close();
+                }
+                catch (Exception e) {}
+            }
         }
 
         if (lastModified == 0) {
