@@ -1,6 +1,8 @@
-
-| Forked to fix connection leaks |
-| ------------------------------ |
+**************************************
+**                                  **
+**  Forked to fix connection leaks  **
+**                                  **
+**************************************
 
 JNLPDownloadServlet
 -------------------
