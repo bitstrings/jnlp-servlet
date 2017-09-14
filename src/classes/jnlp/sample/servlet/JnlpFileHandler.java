@@ -86,7 +86,8 @@ public class JnlpFileHandler {
         throws IOException {
         String path = jnlpres.getPath();
         URL resource = jnlpres.getResource();
-        long lastModified = jnlpres.getLastModified();
+        //long lastModified = jnlpres.getLastModified();
+        long lastModified = new Date().getTime();
 
 
         _log.addDebug("lastModified: " + lastModified + " " + new Date(lastModified));
