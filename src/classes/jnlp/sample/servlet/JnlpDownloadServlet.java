@@ -34,11 +34,15 @@
 
 package jnlp.sample.servlet;
 
-import java.io.*;
-import java.util.*;
-import java.net.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import java.io.IOException;
+import java.net.URLConnection;
+import java.util.ResourceBundle;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * This Servlet class is an implementation of JNLP Specification's
@@ -75,6 +79,7 @@ public class JnlpDownloadServlet extends HttpServlet {
     private ResourceCatalog _resourceCatalog = null;
 
     /** Initialize servlet */
+    @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
 
@@ -101,17 +106,19 @@ public class JnlpDownloadServlet extends HttpServlet {
     }
 
 
+    @Override
     public void doHead(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
         handleRequest(request, response, true);
     }
 
     /** We handle get requests too - eventhough the spec. only requeres POST requests */
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         handleRequest(request, response, false);
     }
 
-    private void handleRequest(HttpServletRequest request,
+    private synchronized void handleRequest(HttpServletRequest request,
             HttpServletResponse response, boolean isHead) throws IOException {
         String requestStr = request.getRequestURI();
         if (request.getQueryString() != null) requestStr += "?" + request.getQueryString().trim();
@@ -146,26 +153,33 @@ public class JnlpDownloadServlet extends HttpServlet {
 
             if (isHead) {
 
-                int cl =
-                      jnlpres.getResource().openConnection().getContentLength();
+                int cl;
+                URLConnection conn = jnlpres.getResource().openConnection();
+                try {
+                    cl = conn.getContentLength();
+                }
+                finally {
+                    conn.getInputStream().close();
+                }
+
 
                 // head request response
                 dres = DownloadResponse.getHeadRequestResponse(
                         jnlpres.getMimeType(), jnlpres.getVersionId(),
                         jnlpres.getLastModified(), cl);
 
-            } else if (ifModifiedSince != -1 &&
-                    (ifModifiedSince / 1000) >=
-                    (jnlpres.getLastModified() / 1000)) {
-                // We divide the value returned by getLastModified here by 1000
-                // because if protocol is HTTP, last 3 digits will always be
-                // zero.  However, if protocol is JNDI, that's not the case.
-                // so we divide the value by 1000 to remove the last 3 digits
-                // before comparison
-
-                // return 304 not modified if possible
-                _log.addDebug("return 304 Not modified");
-                dres = DownloadResponse.getNotModifiedResponse();
+//            } else if (ifModifiedSince != -1 &&
+//                    (ifModifiedSince / 1000) >=
+//                    (jnlpres.getLastModified() / 1000)) {
+//                // We divide the value returned by getLastModified here by 1000
+//                // because if protocol is HTTP, last 3 digits will always be
+//                // zero.  However, if protocol is JNDI, that's not the case.
+//                // so we divide the value by 1000 to remove the last 3 digits
+//                // before comparison
+//
+//                // return 304 not modified if possible
+//                _log.addDebug("return 304 Not modified");
+//                dres = DownloadResponse.getNotModifiedResponse();
 
             } else {
 

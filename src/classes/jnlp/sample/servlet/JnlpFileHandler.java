@@ -34,18 +34,32 @@
 
 package jnlp.sample.servlet;
 
-import java.util.*;
-import java.util.regex.*;
-import java.net.*;
-import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.xml.parsers.*;
-import org.xml.sax.*;
-import javax.xml.transform.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.TimeZone;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpUtils;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.*;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /* The JNLP file handler implements a class that keeps
  * track of JNLP files and their specializations
@@ -115,26 +129,21 @@ public class JnlpFileHandler {
         StringBuffer jnlpFileTemplate = new StringBuffer();
 
         URLConnection conn = resource.openConnection();
-        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-        try {
-        String line = br.readLine();
-        if (line != null && line.startsWith("TS:")) {
-            timeStamp = parseTimeStamp(line.substring(3));
-            _log.addDebug("Timestamp: " + timeStamp + " " + new Date(timeStamp));
-            if (timeStamp == 0) {
-                _log.addWarning("servlet.log.warning.notimestamp", path);
-                timeStamp = lastModified;
+        try ( BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8")) ) {
+            String line = br.readLine();
+            if (line != null && line.startsWith("TS:")) {
+                timeStamp = parseTimeStamp(line.substring(3));
+                _log.addDebug("Timestamp: " + timeStamp + " " + new Date(timeStamp));
+                if (timeStamp == 0) {
+                    _log.addWarning("servlet.log.warning.notimestamp", path);
+                    timeStamp = lastModified;
+                }
+                line = br.readLine();
             }
-            line = br.readLine();
-        }
-        while(line != null) {
-            jnlpFileTemplate.append(line);
-            line = br.readLine();
-        }
-        }
-        finally
-        {
-            br.close();
+            while(line != null) {
+                jnlpFileTemplate.append(line);
+                line = br.readLine();
+            }
         }
 
         String jnlpFileContent = specializeJnlpTemplate(dreq.getHttpRequest(), path, jnlpFileTemplate.toString());

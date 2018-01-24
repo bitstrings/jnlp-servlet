@@ -33,10 +33,19 @@
  */
 
 package jnlp.sample.servlet;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Date;
+import java.util.MissingResourceException;
+
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -65,6 +74,7 @@ abstract public class DownloadResponse {
 
     public DownloadResponse() { /* do nothing */ }
 
+    @Override
     public String toString() { return getClass().getName(); }
 
     /** Post information to an HttpResponse */
@@ -104,6 +114,7 @@ abstract public class DownloadResponse {
     //
 
     static private class NotModifiedResponse extends DownloadResponse {
+        @Override
         public void sendRespond(HttpServletResponse response) throws
                 IOException {
             response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
@@ -111,12 +122,14 @@ abstract public class DownloadResponse {
     }
 
     static private class NotFoundResponse extends DownloadResponse {
+        @Override
         public void sendRespond(HttpServletResponse response) throws IOException {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
     static private class NoContentResponse extends DownloadResponse {
+        @Override
         public void sendRespond(HttpServletResponse response) throws IOException {
             response.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
@@ -137,6 +150,7 @@ abstract public class DownloadResponse {
         }
 
         /** Post information to an HttpResponse */
+        @Override
         public void sendRespond(HttpServletResponse response) throws
                 IOException {
             // Set header information
@@ -164,12 +178,14 @@ abstract public class DownloadResponse {
             _message = msg + " " + dsc;
         }
 
+        @Override
         public void sendRespond(HttpServletResponse response) throws IOException {
             response.setContentType(JNLP_ERROR_MIMETYPE);
             PrintWriter pw = response.getWriter();
             pw.println(_message);
         };
 
+        @Override
         public String toString() { return super.toString() + "[" + _message + "]"; }
     }
 
@@ -202,7 +218,9 @@ abstract public class DownloadResponse {
         abstract InputStream getContent() throws IOException;
 
         /** Post information to an HttpResponse */
+        @Override
         public void sendRespond(HttpServletResponse response) throws IOException {
+
             // Set header information
             response.setContentType(getMimeType());
             response.setContentLength(getContentLength());
@@ -219,18 +237,18 @@ abstract public class DownloadResponse {
                 }
             }
 
+            response.setBufferSize( getContentLength() );
+
             // Send contents
-            InputStream in = getContent();
-            OutputStream out = response.getOutputStream();
-            try {
-                byte[] bytes = new byte[32 * 1024];
+            try (
+                InputStream in = getContent();
+                OutputStream out = response.getOutputStream(); )
+            {
+                byte[] bytes = new byte[512 * 1024];
                 int read;
                 while ((read = in.read(bytes)) != -1) {
                     out.write(bytes, 0, read);
                 }
-            } finally {
-                if (in != null) in.close();
-                if (out != null) out.close();
             }
         }
 
@@ -254,8 +272,11 @@ abstract public class DownloadResponse {
             _content = content;
         }
 
+        @Override
         int getContentLength() { return _content.length; }
+        @Override
         InputStream getContent() { return new ByteArrayInputStream(_content); }
+        @Override
         public String toString() { return super.toString() + "[ " + getArgString() + "]"; }
     }
 
@@ -267,6 +288,7 @@ abstract public class DownloadResponse {
             _url= url;
         }
 
+        @Override
         int getContentLength() throws IOException {
             URLConnection conn = _url.openConnection();
             try {
@@ -276,9 +298,11 @@ abstract public class DownloadResponse {
                 conn.getInputStream().close();
             }
         }
+        @Override
         InputStream getContent() throws IOException {
             return _url.openConnection().getInputStream();
         }
+        @Override
         public String toString() { return super.toString() + "[ " + getArgString() + "]"; }
     }
 
@@ -290,14 +314,17 @@ abstract public class DownloadResponse {
             _file = file;
         }
 
+        @Override
         int getContentLength() throws IOException {
             return (int)_file.length();
         }
 
+        @Override
         InputStream getContent() throws IOException {
             return new BufferedInputStream(new FileInputStream(_file));
         }
 
+        @Override
         public String toString() { return super.toString() + "[ " + getArgString() + "]"; }
     }
 }
