@@ -118,7 +118,7 @@ public class JnlpDownloadServlet extends HttpServlet {
         handleRequest(request, response, false);
     }
 
-    private synchronized void handleRequest(HttpServletRequest request,
+    private void handleRequest(HttpServletRequest request,
             HttpServletResponse response, boolean isHead) throws IOException {
         String requestStr = request.getRequestURI();
         if (request.getQueryString() != null) requestStr += "?" + request.getQueryString().trim();
